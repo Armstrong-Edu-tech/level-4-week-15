@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Match Center (Vue.js)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1e272e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        .match-card {
+            background: white; color: #333; width: 460px; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
+        }
+
+        .header { background: #006266; color: white; padding: 15px; font-weight: bold; position: relative; }
+        .live-tag { background: #e74c3c; padding: 3px 8px; border-radius: 4px; font-size: 12px; animation: pulse 1s infinite; }
+        
+        .teams { display: flex; justify-content: space-around; align-items: center; padding: 20px 0; }
+        .team-name { font-size: 1.2rem; font-weight: bold; width: 40%; }
+        
+        .team-1 { color: #d63031; }
+        .team-2 { color: #2d3436; }
+        
+        .score-board { font-size: 2.5rem; font-weight: 800; color: #2c3e50; }
+        
+        .info-section { background: #f1f2f6; padding: 15px; font-size: 0.9rem; color: #7f8c8d; border-top: 1px solid #ddd; }
+        .event-log { padding: 15px; color: #e67e22; font-weight: bold; min-height: 20px; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="app" v-cloak>
+        <div class="match-card">
+            <div class="header">
+                <span class="live-tag" v-if="isConnected">LIVE</span>
+                {{ matchInfo.tournament }}
+            </div>
+
+            <div class="teams">
+                <div class="team-name team-1">{{ matchInfo.team1 }}</div>
+                
+                <div class="score-board">
+                    {{ liveData.score1 }} - {{ liveData.score2 }}
+                </div>
+                
+                <div class="team-name team-2">{{ matchInfo.team2 }}</div>
+            </div>
+
+            <div class="event-log">
+                ⏱ {{ liveData.minute }}' : {{ liveData.event }}
+            </div>
+
+            <div class="info-section">
+                <p>🏟 Stadium: {{ matchInfo.stadium }}</p>
+                <p>👔 Referee: {{ matchInfo.referee }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    isConnected: false,
+                    matchInfo: {
+                        team1: 'Loading...',
+                        team2: 'Loading...',
+                        stadium: '-',
+                        referee: '-',
+                        tournament: '-'
+                    },
+                    liveData: {
+                        score1: 0,
+                        score2: 0,
+                        minute: 0,
+                        event: 'Waiting for kickoff...'
+                    }
+                }
+            },
+            mounted() {
+                this.fetchMatchInfo();
+                this.initWebSocket();
+            },
+            methods: {
+                async fetchMatchInfo() {
+                    try {
+                        const response = await fetch('/api/match-info');
+                        const data = await response.json();
+                        this.matchInfo = data; 
+                    } catch (error) {
+                        console.error("Failed to fetch match info via REST", error);
+                    }
+                },
+                initWebSocket() {
+                    const socket = io();
+                    socket.on('connect', () => {
+                        this.isConnected = true;
+                    });
+                    socket.on('match-update', (data) => {
+                        this.liveData = data;
+                    });
+                    socket.on('disconnect', () => {
+                        this.isConnected = false;
+                    });
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+
+
+

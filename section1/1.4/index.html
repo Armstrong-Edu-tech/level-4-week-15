@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Classroom Chat</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background: white; padding: 40px; border-radius: 12px;
+            text-align: center; width: 350px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-box h2 { margin-top: 0; color: #2c3e50; }
+
+        .login-box input {
+            width: 100%; padding: 12px; margin: 20px 0;
+            border: 1px solid #ccc; border-radius: 6px; outline: none;
+            box-sizing: border-box;
+        }
+
+        .login-box button {
+            width: 100%; padding: 12px; background: #007bff; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold;
+        }
+
+        .login-box button:hover { background: #0056b3; }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h2.chat-title {
+            text-align: center; color: #333; margin: 0 0 15px 0;
+        }
+
+        #messages {
+            list-style-type: none; margin: 0; padding: 20px;
+            background: white;
+            flex-grow: 1;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+        }
+        
+        li { padding: 10px 15px; margin-bottom: 8px; border-bottom: 1px solid #f1f1f1; }
+        li:last-child { border-bottom: none; }
+
+        .username { font-weight: bold; color: #2980b9; margin-right: 8px; }
+        
+        .system {
+            color: #7f8c8d; font-style: italic; font-size: 0.9em;
+            text-align: center; background: #f8f9fa;
+            padding: 8px; border-radius: 20px; margin: 10px auto;
+            width: fit-content; border: 1px solid #eee;
+            display: block;
+        }
+
+        form { display: flex; gap: 10px; height: 50px; flex-shrink: 0; }
+
+        #msg-input {
+            flex-grow: 1; padding: 0 20px; border-radius: 25px;
+            border: 1px solid #ddd; outline: none; font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        #msg-input:focus { border-color: #2980b9; }
+        
+        .send-btn {
+            padding: 0 30px; background: #27ae60; color: white;
+            border: none; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 16px;
+            box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+        }
+
+        .send-btn:hover { background: #219150; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="login-screen" v-if="!joined">
+            <div class="login-box">
+                <h2>👋 Join Classroom</h2>
+                <input type="text" v-model="username" placeholder="Enter your name..." autocomplete="off" @keyup.enter="joinChat">
+                <button @click="joinChat">Enter Chat</button>
+            </div>
+        </div>
+        <div id="chat-container" v-else>
+            <h2 class="chat-title">💬 Student Group Chat</h2>
+            <ul id="messages">
+                <li v-for="(msg, index) in messages" :key="index">
+                    <span v-if="msg.type === 'chat'">
+                        <span class="username">{{ msg.user }}:</span>{{ msg.text }}
+                    </span>
+                    <span v-else class="system">
+                        {{ msg.text }}
+                    </span>
+                </li>
+            </ul>
+            <form @submit.prevent="sendMessage">
+                <input id="msg-input" autocomplete="off" placeholder="Type a message..." v-model="newMessage" />
+                <button class="send-btn">Send</button>
+            </form>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    socket: null,
+                    username: '',
+                    joined: false,
+                    newMessage: '',
+                    messages: []
+                }
+            },
+            mounted() {
+                this.socket = io();
+                this.socket.on('chat message', (data) => {
+                    this.messages.push({ type: 'chat', user: data.user, text: data.text });
+                });
+                this.socket.on('system notification', (notifText) => {
+                    this.messages.push({ type: 'system', text: notifText });
+                });
+            },
+            methods: {
+                joinChat() {
+                    if (this.username.trim()) {
+                        this.socket.emit('new user', this.username);
+                        this.joined = true;
+                    } else {
+                        alert("Please enter a valid name!");
+                    }
+                },
+                sendMessage() {
+                    if (this.newMessage.trim()) {
+                        this.socket.emit('chat message', this.newMessage);
+                        this.newMessage = '';
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

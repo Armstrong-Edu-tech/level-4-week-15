@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Alerts (Vue.js)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 50px; background: #f4f4f9; }
+        
+        .admin-panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
+        input { padding: 10px; width: 250px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #c0392b; }
+
+        #notification-area { position: fixed; top: 20px; right: 20px; width: 300px; z-index: 1000; }
+        
+        .toast {
+            background: #2ecc71; color: white; padding: 15px; margin-bottom: 10px;
+            border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s, fadeOut 0.5s 4s forwards;
+        }
+
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <section class="admin-panel">
+            <h2>⚠️ Admin Alert System</h2>
+            <p>Send a real-time update to all users:</p>
+            <input type="text" v-model="alertMessage" @keyup.enter="sendAlert">
+            <button @click="sendAlert">Broadcast Alert</button>
+        </section>
+        <section id="notification-area">
+            <div v-for="notification in notifications" :key="notification.time" class="toast">
+                <strong>🔔 Update ({{ notification.timestamp }}):</strong><br>{{ notification.message }}
+            </div>
+        </section>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    socket: null,
+                    alertMessage: '', 
+                    notifications: []
+                }
+            },
+            mounted() {
+                this.socket = io();
+                this.socket.on('receive notification', (msg) => {
+                    this.addNotification(msg);
+                });
+            },
+            methods: {
+                sendAlert() {
+                    if (this.alertMessage) {
+                        this.socket.emit('send notification',   this.alertMessage);
+                        this.alertMessage = '';
+                    }
+                },
+                addNotification(msg) {
+                    const time = Date.now();
+                    this.notifications.push({ ...msg, time });
+                    setTimeout(() => {
+                        this.notifications = this.notifications.filter(n => n.time !== time);
+                    }, 4500);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

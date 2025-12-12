@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Collaborative To-Do Sync</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding-top: 50px; }
+        
+        #app {
+            width: 400px; background: white; padding: 20px; border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        p.subtitle { text-align: center; color: #777; font-size: 0.9em; margin-bottom: 20px; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
+        button.add-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        button.add-btn:hover { background: #0056b3; }
+
+        ul { list-style: none; padding: 0; margin: 0; }
+        
+        li {
+            display: flex; 
+            align-items: center;
+            padding: 12px; 
+            border-bottom: 1px solid #eee; 
+            transition: background 0.2s;
+        }
+        li:last-child { border-bottom: none; }
+        
+        li.updated { background-color: #e8f5e9; }
+
+        input[type="checkbox"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .todo-text { 
+            cursor: pointer; 
+            flex-grow: 1;
+            text-align: left;
+            font-size: 16px;
+        }
+        .completed { text-decoration: line-through; color: #aaa; }
+
+        .delete-btn { background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 1.2em; margin-left: 10px; }
+        .delete-btn:hover { color: #d63031; }
+
+        .status-dot {
+            height: 10px; width: 10px; background-color: #bbb; border-radius: 50%;
+            display: inline-block; margin-right: 5px;
+        }
+        .connected { background-color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>
+            <span class="status-dot" :class="{ connected: connected }"></span>
+            Team To-Do List
+        </h2>
+        <p class="subtitle">Changes sync across all open tabs instantly.</p>
+
+        <form @submit.prevent="addTodo" class="input-group">
+            <input type="text" v-model="newTodoText" placeholder="What needs to be done?" required />
+            <button class="add-btn">Add</button>
+        </form>
+
+        <ul>
+            <li v-for="todo in todos" :key="todo.id" :class="{ updated: todo.justUpdated }">
+                <input type="checkbox" :checked="todo.completed" @click.prevent="toggleTodo(todo)">
+                
+                <span class="todo-text" :class="{ completed: todo.completed }" @click="toggleTodo(todo)">
+                    {{ todo.text }}
+                </span>
+
+                <button class="delete-btn" @click.stop="deleteTodo(todo.id)">&times;</button>
+            </li>
+        </ul>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    socket: null,
+                    todos: [],
+                    newTodoText: '',
+                    connected: false
+                }
+            },
+            mounted() {
+                this.socket = io();
+                this.socket.on('connect', () => {
+                    this.connected = true;
+                });
+
+                this.socket.on('disconnect', () => {
+                    this.connected = false;
+                });
+
+                this.fetchTodos();
+
+                this.socket.on('sync:add', (newTodo) => {
+                    this.todos.push(newTodo);
+                });
+
+                this.socket.on('sync:update', (updatedTodo) => {
+                    const index = this.todos.findIndex(t => t.id === updatedTodo.id);
+                    if (index !== -1) {
+                        this.todos[index] = updatedTodo;
+                        this.todos[index].justUpdated = true;
+                        setTimeout(() => this.todos[index].justUpdated = false, 1000);
+                    }
+                });
+
+                this.socket.on('sync:delete', (id) => {
+                    this.todos = this.todos.filter(t => t.id !== id);
+                });
+            },
+            methods: {
+                async fetchTodos() {
+                    const res = await fetch('/api/todos');
+                    this.todos = await res.json();
+                },
+                async addTodo() {
+                    if (!this.newTodoText) return;
+                    await fetch('/api/todos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: this.newTodoText })
+                    });
+                    this.newTodoText = '';
+                },
+                async toggleTodo(todo) {
+                    await fetch(`/api/todos/${todo.id}`, { method: 'PUT' });
+                },
+                async deleteTodo(id) {
+                    await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 2px dashed #dce1e6;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        input[type="file"] {
+            width: 100%;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-upload {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-upload:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .btn-download {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background-color: #219150;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .success-box {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <h2>File Manager</h2>
+        <div class="file-input-wrapper">
+            <input type="file" @change="onFileChange">
+        </div>
+        <button class="btn btn-upload" @click="uploadFile" :disabled="!file || uploading">
+            {{ uploading ? 'Uploading...' : 'Upload File' }}
+        </button>
+        <p class="status" :style="{ color: statusColor }">{{ message }}</p>
+        <div v-if="serverFileName" class="success-box">
+            <p>File Saved: <b>{{ serverFileName }}</b></p>
+            <button class="btn btn-download" @click="downloadFile">
+                Download File
+            </button>
+        </div>
+    </div>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    file: null,
+                    uploading: false,
+                    message: '',
+                    statusColor: '#333',
+                    serverFileName: ''
+                };
+            },
+            methods: {
+                onFileChange(e) {
+                    this.file = e.target.files[0];
+                    this.message = '';
+                    this.serverFileName = '';
+                },
+                async uploadFile() {
+                    if (!this.file) return;
+                    this.uploading = true;
+                    this.message = 'Streaming data...';
+                    this.statusColor = '#2980b9';
+
+                    try {
+                        const response = await fetch('/upload', {
+                            method: 'POST',
+                            headers: {
+                                'x-file-name': this.file.name
+                            },
+                            body: this.file
+                        });
+                        if (response.ok) {
+                            const name = await response.text();
+                            this.serverFileName = name;
+                            this.message = 'Upload Successful!';
+                            this.statusColor = '#27ae60';
+                        } else {
+                            throw new Error('Upload failed');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        this.message = 'Error connecting to server.';
+                        this.statusColor = '#c0392b'; 
+                    } finally {
+                        this.uploading = false;
+                    }
+                },
+                downloadFile() {
+                    const link = document.createElement('a');
+                    link.href = '/download';
+                    link.setAttribute('download', this.serverFileName);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+
+</html>
+
+
+
