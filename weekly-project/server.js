@@ -1,37 +1,23 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require("socket.io");
-const path = require('path');
+const express = require("express");
+const http = require("http");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
+const { initIO } = require("./utils/io.utils");
+const cartRoutes = require("./routes/cart.routes");
+
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static("public"));
 app.use(express.json());
 
-const cartRoutes = require('./routes/cart.routes');
+initIO(server);
 
-app.use((req, res, next) => {
-    req.io = io;
-    next();
-});
+app.use("/api/cart", cartRoutes);
 
-app.use('/api/cart', cartRoutes);
-
-io.on('connection', (socket) => {
-    console.log(`User Connected: ${socket.id}`);
-    
-    socket.emit('sessionDetails', { socketId: socket.id });
-
-    socket.on('disconnect', () => {
-    });
-});
-
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

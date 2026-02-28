@@ -3,20 +3,17 @@
 This folder demonstrates file streaming with HTTP range request support for efficient large file downloads.
 
 ### What it does:
-- Serves a large file (`bigfile.txt`) for download
+- Serves a file (`bigfile.txt`) for download
 - Supports HTTP range requests (partial content) for resumable downloads
-- Streams file in chunks (64KB) with controlled flow
-- Implements backpressure handling to prevent memory issues
+- Streams the file in 64KB chunks with a small delay between writes
 
 ### Features:
 - HTTP Range request support (206 Partial Content)
 - Chunked file streaming (64KB chunks)
-- Flow control with pause/resume
-- Download progress support
-- Web interface (index.html) for testing downloads
+- Throttled streaming with pause/resume
+- Web interface for testing downloads
 
 ### API Endpoints:
-- `GET /` - Serves the HTML interface
 - `GET /download` - Downloads the file with range request support
 
 ### Installation:
@@ -29,4 +26,4 @@ npm install
 node index.js
 ```
 
-Open `http://localhost:3000` to test the file download. The server supports resumable downloads if the connection is interrupted.
+Open `http://localhost:3000` (or `PORT` from `.env`) to test the file download. The server supports resumable downloads if the connection is interrupted.

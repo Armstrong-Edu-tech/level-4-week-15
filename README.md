@@ -4,7 +4,8 @@ This repository contains multiple small Node.js/Express topics organized by sect
 
 - **Prerequisites**: Node.js (v18+ recommended) and npm installed.
 - **Install dependencies**: Run `npm install` inside each topic folder before running it the first time.
-- **Run a topic**: From that topic folder, use `node index.js` or `node server.js` or `npm start` (if a start script exists in `package.json`).
+- **Environment variables**: Each topic supports `PORT` via `.env` (and the weekly project uses email credentials for alerts).
+- **Run a topic**: From that topic folder, use `node index.js` or `node server.js` (and `npm start` if a start script exists).
 
 ### Folders
 

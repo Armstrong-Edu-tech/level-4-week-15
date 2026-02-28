@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Real-Time Alerts (Vue.js)</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 50px; background: #f4f4f9; }
         
         .admin-panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
-        input { padding: 10px; width: 250px; border: 1px solid #ddd; border-radius: 5px; }
+        input { margin: 3px; padding: 10px; width: 250px; border: 1px solid #ddd; border-radius: 5px; }
         button { padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
         button:hover { background: #c0392b; }
 
@@ -26,19 +27,18 @@
 <body>
     <div id="app">
         <section class="admin-panel">
-            <h2>⚠️ Admin Alert System</h2>
+            <h2>Admin Alert System</h2>
             <p>Send a real-time update to all users:</p>
             <input type="text" v-model="alertMessage" @keyup.enter="sendAlert">
             <button @click="sendAlert">Broadcast Alert</button>
         </section>
         <section id="notification-area">
             <div v-for="notification in notifications" :key="notification.time" class="toast">
-                <strong>🔔 Update ({{ notification.timestamp }}):</strong><br>{{ notification.message }}
+                <strong>Update ({{ notification.timestamp }}):</strong><br>{{ notification.message }}
             </div>
         </section>
     </div>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         const { createApp } = Vue;
         createApp({

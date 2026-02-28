@@ -14,8 +14,8 @@ This folder contains a todo list application with real-time synchronization acro
   - `POST /api/todos` - Add a new todo
   - `PUT /api/todos/:id` - Toggle todo completion
   - `DELETE /api/todos/:id` - Delete a todo
-- Real-time synchronization via Socket.IO
-- Web interface (index.html)
+- Socket.IO events for sync (`sync:add`, `sync:update`, `sync:delete`)
+- Web interface served from `public/index.html`
 
 ### Installation:
 ```bash
@@ -27,4 +27,4 @@ npm install
 node index.js
 ```
 
-Open `http://localhost:3000` in multiple browser tabs to see todos sync in real-time across all clients.
+Open `http://localhost:3000` (or `PORT` from `.env`) in multiple tabs to see todos sync in real-time across all clients.

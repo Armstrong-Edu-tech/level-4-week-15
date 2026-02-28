@@ -1,19 +1,17 @@
 ## Topic 1.4: Chat Application with Usernames
 
-This folder contains an enhanced chat application with username support and join/leave notifications.
+This folder contains a chat app with usernames and join/leave notifications.
 
 ### What it does:
-- Allows users to set a username when joining
-- Displays system notifications when users join or leave
-- Shows the username with each chat message
-- Broadcasts messages to all connected clients
+- Serves the UI from `public/index.html`
+- Lets users set a username when joining
+- Broadcasts chat messages with usernames
+- Emits system notifications when users join or leave
 
 ### Features:
-- Username assignment and tracking
-- Join/leave system notifications
-- User identification in messages
-- Real-time message broadcasting
-- Web interface (index.html)
+- Socket.IO events (`new user`, `chat message`, `system notification`)
+- Username tracking per socket
+- Express static hosting for the UI
 
 ### Installation:
 ```bash
@@ -25,4 +23,4 @@ npm install
 node index.js
 ```
 
-Open `http://localhost:3000` in multiple browser tabs, set different usernames, and see join/leave notifications and chat messages.
+Open `http://localhost:3000` (or `PORT` from `.env`) in multiple tabs, set different usernames, and see join/leave notifications and chat messages.

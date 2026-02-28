@@ -1,18 +1,17 @@
 ## Topic 1.3: Real-Time Notification System
 
-This folder demonstrates a real-time notification broadcasting system using Socket.IO.
+This folder demonstrates a real-time notification broadcaster using Socket.IO.
 
 ### What it does:
-- Serves an HTML page with a notification interface
-- Allows users to send notifications that are broadcast to all connected clients
-- Includes timestamps with each notification
-- Tracks user connections and disconnections
+- Serves the UI from `public/index.html`
+- Lets clients send notifications to the server
+- Broadcasts notifications to other clients with timestamps
+- Logs connect/disconnect events on the server
 
 ### Features:
-- Real-time notification broadcasting
+- Socket.IO events (`send notification`, `receive notification`)
 - Timestamped notifications
-- Connection management
-- Web interface (index.html)
+- Express static hosting for the UI
 
 ### Installation:
 ```bash
@@ -24,4 +23,4 @@ npm install
 node index.js
 ```
 
-Open `http://localhost:3000` in multiple browser tabs to see notifications broadcast in real-time.
+Open `http://localhost:3000` (or `PORT` from `.env`) in multiple tabs to see notifications broadcast in real-time.

@@ -11,9 +11,8 @@ This folder contains a real-time stock market price simulator that broadcasts li
 ### Features:
 - Real-time price simulation
 - Price updates every 1 second
-- Random price fluctuations (minimum price: $10)
 - Timestamped updates
-- Web interface (index.html)
+- Web interface served from `public/index.html`
 
 ### Installation:
 ```bash
@@ -25,4 +24,4 @@ npm install
 node index.js
 ```
 
-Open `http://localhost:3000` to see live stock price updates. Open multiple tabs to see synchronized updates across all clients.
+Open `http://localhost:3000` (or `PORT` from `.env`) to see live stock price updates. Open multiple tabs to see synchronized updates across all clients.
